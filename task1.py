@@ -12,6 +12,7 @@ import psutil
 import time
 import threading
 import subprocess
+import os
 
 x = 200   # free space on disk in MB
 y = 15    # file size in MB
@@ -25,13 +26,14 @@ def dd_func(file_size,file_number,path):
   # Default command to run
   cmd = ['dd', 'if=/dev/zero', 'of=file.dat', 'bs=2M', 'count=1', 'status=none']
   # Update file name
-  cmd[2] = 'of='+ path + 'tmp/file' + str(file_number) + '.dat'
+  cmd[2] = 'of='+ path + 'var/tmp/file' + str(file_number) + '.dat'
   # Update file size
   cmd[3] = 'bs=' + str(file_size) + 'M'
   try:
     subprocess.run(cmd, check=True, capture_output=True)
   except subprocess.CalledProcessError as e:
     print(f"An error occured {e.stderr}")
+    os._exit(e.returncode)
       
 
 def get_free_space(partition):
@@ -50,15 +52,15 @@ if __name__ == "__main__":
   for p in partitions:
     if p.fstype not in ('nfs', 'smb') and get_free_space(p.mountpoint) >= x:
       print(f"Disk {p.device} has free {get_free_space(p.mountpoint)}MB")
-      print(f"Creating {z} file(s) in {p.mountpoint}tmp folder")
+      print(f"Creating {z} file(s) in {p.mountpoint}var/tmp folder")
       
       for i in range(z):
         thread = threading.Thread(target=dd_func, args=(y,i,p.mountpoint))
         thread_list.append(thread)
       
       for thread in thread_list:
-          thread.start()
-
+        thread.start()
+      
       for thread in thread_list:
         thread.join()
       
