@@ -26,7 +26,7 @@ def dd_func(file_size,file_number,path):
   # Default command to run
   cmd = ['dd', 'if=/dev/zero', 'of=file.dat', 'bs=2M', 'count=1', 'status=none']
   # Update file name
-  cmd[2] = 'of='+ path + 'var/tmp/file' + str(file_number) + '.dat'
+  cmd[2] = 'of='+ path + '/file' + str(file_number) + '.dat'
   # Update file size
   cmd[3] = 'bs=' + str(file_size) + 'M'
   try:
@@ -52,7 +52,7 @@ if __name__ == "__main__":
   for p in partitions:
     if p.fstype not in ('nfs', 'smb') and get_free_space(p.mountpoint) >= x:
       print(f"Disk {p.device} has free {get_free_space(p.mountpoint)}MB")
-      print(f"Creating {z} file(s) in {p.mountpoint}var/tmp folder")
+      print(f"Creating {z} file(s) in {p.mountpoint} folder")
       
       for i in range(z):
         thread = threading.Thread(target=dd_func, args=(y,i,p.mountpoint))
