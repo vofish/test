@@ -9,7 +9,6 @@ w/o using temp files.
 """
 
 
-import os
 import subprocess
 import sys
 import threading
@@ -24,11 +23,10 @@ def remote_run(host,command):
   # Set command to run
   cmd[3] = command
   try:
-    result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print(f"Output from {host}\n", result.stdout)
-  except subprocess.CalledProcessError as e:
-      print(e.stderr)
-
+  except subprocess.SubprocessError as e:
+    print(e.stderr)
 
 if __name__ == "__main__":
 
