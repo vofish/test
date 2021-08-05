@@ -10,44 +10,55 @@ w/o using temp files.
 
 
 import ipaddress
+import os
 import subprocess
 import sys
 import threading
+from argparse import ArgumentParser
 
 
 def remote_run(host,command):
   # Default command to run
-  cmd = ['ssh', '0.0.0.0', 'some command']
+  cmd = ['ssh', '-o ConnectTimeout=2', '0.0.0.0', 'some command']
   # Set IP address
-  cmd[1] = host
+  cmd[2] = host
   # Set command to run
-  cmd[2] = command
+  cmd[3] = command
   try:
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    print(result.stdout)
+    result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    print(f"Output from {host}\n", result.stdout)
   except subprocess.CalledProcessError as e:
     print(f"An error occured {e.stderr}")
+    os._exit(e.returncode)
 
 
 if __name__ == "__main__":
 
-  if len(sys.argv) == 1:
-    print("Please provide IP blank-separated list to run command remotely")
-    exit
+  parser = ArgumentParser()
+  parser.add_argument("-c", dest='Command', type = str,
+                      help="command to run on remote servers, if there is a blank in it use quotes")
+  parser.add_argument("-ip", dest='Addresses',
+                      help="IP address of server, blank-separated if many", nargs='+')
 
+  args = parser.parse_args()
+  
+  if len(sys.argv) <= 3:
+    parser.print_help(sys.stderr)
+    sys.exit(1)
+    
   # Validate IP addresses and remove not valid from list
-  ip_list = sys.argv[1:]
+  ip_list = args.Addresses
   for ip in ip_list:
     try:
       ipaddress.ip_address(ip)
     except:
       if ValueError:
         ip_list.remove(ip)
-
+  
   thread_list = []
 
   for ip in ip_list:
-    thread = threading.Thread(target=remote_run, args=(ip, 'cat /var/log/syslog'))
+    thread = threading.Thread(target=remote_run, args=(ip, str(args.Command)))
     thread_list.append(thread)
   
   for thread in thread_list:
